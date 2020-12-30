@@ -62,6 +62,8 @@ bool PID::Compute()
    unsigned long timeChange = (now - lastTime);
    if(timeChange>=SampleTime)
    {
+      double output;
+
       /*Compute all the working error variables*/
       double input = *myInput;
       double error = *mySetpoint - input;
@@ -69,14 +71,13 @@ bool PID::Compute()
       outputSum+= (ki * error);
 
       /*Add Proportional on Measurement, if P_ON_M is specified*/
-      if(!pOnE) outputSum-= kp * dInput;
+      if(pOnM) outputSum-= pOnMKp * dInput
 
       if(outputSum > outMax) outputSum= outMax;
       else if(outputSum < outMin) outputSum= outMin;
 
       /*Add Proportional on Error, if P_ON_E is specified*/
-	   double output;
-      if(pOnE) output = kp * error;
+      if(pOnE) Output = pOnEKp * error; 
       else output = 0;
 
       /*Compute Rest of PID Output*/
@@ -99,12 +100,12 @@ bool PID::Compute()
  * it's called automatically from the constructor, but tunings can also
  * be adjusted on the fly during normal operation
  ******************************************************************************/
-void PID::SetTunings(double Kp, double Ki, double Kd, int POn)
+void PID::SetTunings(double Kp, double Ki, double Kd, double pOn)
 {
-   if (Kp<0 || Ki<0 || Kd<0) return;
-
-   pOn = POn;
-   pOnE = POn == P_ON_E;
+   if (Kp<0 || Ki<0|| Kd<0 || pOn<0 || pOn>1) return;
+  
+   pOnE = pOn>0; //some p on error is desired;
+   pOnM = pOn<1; //some p on measurement is desired;
 
    dispKp = Kp; dispKi = Ki; dispKd = Kd;
 
@@ -119,6 +120,9 @@ void PID::SetTunings(double Kp, double Ki, double Kd, int POn)
       ki = (0 - ki);
       kd = (0 - kd);
    }
+
+   pOnEKp = pOn * kp; 
+   pOnMKp = (1 - pOn) * kp;
 }
 
 /* SetTunings(...)*************************************************************
