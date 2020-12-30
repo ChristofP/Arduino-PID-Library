@@ -24,6 +24,7 @@ PID::PID(double* Input, double* Output, double* Setpoint,
     myInput = Input;
     mySetpoint = Setpoint;
     inAuto = false;
+    pOnE = true, pOnM = false;
 
     PID::SetOutputLimits(0, 255);				//default output limit corresponds to
 												//the arduino pwm limits
